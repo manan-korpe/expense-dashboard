@@ -1,0 +1,19 @@
+{
+  "name": "hh",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "client": "cd client && npm run dev",
+    "server": "cd server && npm run dev",
+    "dev": "concurrently \"npm run client\"  \"npm run server\" "
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "concurrently": "^9.1.2",
+    "jsonwebtoken": "^9.0.2"
+  }
+}
