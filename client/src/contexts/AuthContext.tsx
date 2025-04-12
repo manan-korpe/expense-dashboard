@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import axios from "axios";
+import {registerApi,loginApi} from "../api/auth.tsx";
 
 type User = {
   id: string;
@@ -51,18 +52,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-      // In a real app, this would be an API call
-      // For demo purposes, we'll simulate a successful login if the email contains "@" and password is at least 6 chars
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
-      
-      if (!email.includes('@') || password.length < 6) {
-        toast.error('Invalid credentials');
-        return false;
-      }
+      const response = await loginApi({
+        email,password
+      });
       
       const newUser = {
-        id: `user_${Date.now()}`,
-        name: email.split('@')[0],
+        id: response.id,
+        name: response.name,
         email,
       };
       
@@ -72,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return true;
     } catch (error) {
       console.error('Login error:', error);
-      toast.error('Failed to login');
+      toast.error(error.message || 'Failed to login');
       return false;
     } finally {
       setIsLoading(false);
@@ -83,13 +79,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       
-      const response = await axios.post("http://localhost:8000/api/v1/register",{
-        name,
-        email,
-        password
+      const response = await registerApi({
+        name,email,password
       });
-
-      console.log(response);
       
       if (!email.includes('@') || password.length < 6 || !name) {
         toast.error('Invalid registration information');
@@ -97,13 +89,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       const newUser = {
-        id: response?.data?.id,
+        id: response.id,
         name,
         email,
       };
       
       setUser(newUser);
-      localStorage.setItem('pocketplus_user', JSON.stringify(newUser));
       toast.success('Account created successfully');
       return true;
     } catch (error) {

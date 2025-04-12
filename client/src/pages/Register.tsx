@@ -50,7 +50,7 @@ const Register = () => {
     
     const success = await register(name, email, password);
     if (success) {
-      navigate('/dashboard');
+      navigate('/login');
     }
   };
 

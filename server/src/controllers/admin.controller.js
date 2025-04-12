@@ -19,13 +19,14 @@ export const register = asyncHandler (async(req, res) => {
 
 export const login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
-
+    
     const user = await admin.findOne({ email });
     if (!user) {
       return res.status(404).json({success:false, message: "Email does not exist" });
     }
-
+    
     const isMatch = await HashToPlain(password, user.password);
+    console.log("rhis runding"+isMatch);
     if (!isMatch) {
       return res.status(401).json({success:false, message: "Password does not match" });
     }
@@ -35,6 +36,6 @@ export const login = asyncHandler(async (req, res) => {
 
     res.cookie("admin", token, { httpOnly: true, maxAge: 60 * 60 * 1000 });
 
-    return res.status(200).json({success:true, message: "Login successful", token });
+    return res.status(200).json({success:true, message: "Login successful",data:{id:user.id,name:user.name,email:user.email} });
 });
   

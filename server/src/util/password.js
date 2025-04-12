@@ -8,6 +8,7 @@ export const plainToHash = async (password) => {
 }
 
 export const HashToPlain = async (password,hashpassword) => {
-    const output = await bcrypt.compare(password,hashpassword)
+    const output = await bcrypt.compare(password,hashpassword);
+    console.log(output)
     return output
 }
