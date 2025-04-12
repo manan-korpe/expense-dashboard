@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from './AuthContext';
+import Tesseract from 'tesseract.js'; //scan bill
 
 export type Category = 
   | 'housing' 
@@ -108,6 +109,31 @@ const SAMPLE_BUDGETS: Budget[] = [
   { id: 'b4', category: 'entertainment', amount: 100, period: 'monthly' }
 ];
 
+//------------------------------------------scan bill------------------------
+const extractTotalBill = (text) => {
+  const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
+  let totalBill = null;
+
+  // Define possible keywords for total
+  const totalKeywords = [
+    /(total|offer total|next bill|grand total)\s*[:\-=\s]?\s*([0-9,.]+(?:\s?[₹$€£]?)?)$/i
+  ];
+
+  // Check lines for total keywords
+  lines.forEach((line) => {
+    const cleanedLine = line.replace(/\s{2,}/g, ' ').trim();
+
+    totalKeywords.forEach(keywordRegex => {
+      const match = cleanedLine.match(keywordRegex);
+      if (match) {
+        totalBill = match[2].trim();
+      }
+    });
+  });
+
+  return totalBill;
+};
+//--------------------------------end---------------------------------
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -197,15 +223,31 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Mock image processing with OCR
   // In a real app, this would call an API or use a library
   const processImageAmount = async (imageUrl: string): Promise<number | null> => {
+
+    
     try {
+      //-------------------------------------------
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const imageData = reader.result;
+
+         const result = await Tesseract.recognize(imageData as any, 'eng', {
+                  logger: (m) => console.log(m),
+                });
+        
+          const text = result.data.text;
+          const randomAmount = extractTotalBill(text);
+          
+          toast.success('Bill amount detected successfully');
+          return randomAmount;
+      }
+       //-------------------------------------------
       // Simulate processing delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Generate a random amount to simulate OCR reading from bill
-      const randomAmount = Math.floor(Math.random() * 200) + 20;
+      // const randomAmount = Math.floor(Math.random() * 200) + 20;
       
-      toast.success('Bill amount detected successfully');
-      return randomAmount;
     } catch (error) {
       console.error('Error processing image:', error);
       toast.error('Failed to process bill image');

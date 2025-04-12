@@ -5,14 +5,15 @@ import asyncHandler from "../util/asyncHandler.js";
 
 export const register = asyncHandler (async(req, res) => {
       const { name,email, password } = req.body;
-  
+      
       const existemail = await admin.findOne({ email });
       if (existemail) {
         return res.status(400).json({ message: "Email already exists" });
       }
+      console.log(name,email,password); 
   
       const hash = await plainToHash(password);
-      const newUser = await admin.create({ email,name, password: hash, confirm_password });
+      const newUser = await admin.create({ email,name, password: hash, password });
       return res.status(201).json({ message: "Registration successful",data:{id:newUser._id,name:newUser.name,email:newUser.email,} });
 });
 

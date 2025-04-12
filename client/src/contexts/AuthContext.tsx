@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import axios from "axios";
 
 type User = {
   id: string;
@@ -35,13 +36,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // Check for saved user in localStorage
-    const savedUser = localStorage.getItem('admin');
+    const savedUser = localStorage.getItem('pocketplus_user');
     if (savedUser) {
       try {
         setUser(JSON.parse(savedUser));
       } catch (error) {
         console.error('Failed to parse saved user:', error);
-        localStorage.removeItem('admin');
+        localStorage.removeItem('pocketplus_user');
       }
     }
     setIsLoading(false);
@@ -50,43 +51,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
+      // In a real app, this would be an API call
+      // For demo purposes, we'll simulate a successful login if the email contains "@" and password is at least 6 chars
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
       
-      if (!email.includes('@')) {
+      if (!email.includes('@') || password.length < 6) {
         toast.error('Invalid credentials');
         return false;
       }
-
-      try {
-        const res = await fetch("http://localhost:8000/api/v1/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email,
-            password
-          }),
-        });
-  
-        const data = await res.json();
-  
-        if (res.ok) {
-          const newUser = {
-            id: data.id,
-            name:data.name,
-            email:data.email,
-          };
-          setUser(newUser);
-          localStorage.setItem('admin', JSON.stringify(newUser));
-          toast.success('Logged in successfully');
-          return true;
-        } else {
-          toast.error(data.message || "Login failed");
-        }
-      } catch (error) {
-        toast.error("Something went wrong");
-        console.error(error);
-      }   
+      
+      const newUser = {
+        id: `user_${Date.now()}`,
+        name: email.split('@')[0],
+        email,
+      };
+      
+      setUser(newUser);
+      localStorage.setItem('pocketplus_user', JSON.stringify(newUser));
+      toast.success('Logged in successfully');
+      return true;
     } catch (error) {
       console.error('Login error:', error);
       toast.error('Failed to login');
@@ -96,43 +79,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (name: string, email: string, password: string,): Promise<boolean> => {
+  const register = async (name: string, email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
+      
+      const response = await axios.post("http://localhost:8000/api/v1/register",{
+        name,
+        email,
+        password
+      });
+
+      console.log(response);
       
       if (!email.includes('@') || password.length < 6 || !name) {
         toast.error('Invalid registration information');
         return false;
       }
       
-      const res = await fetch("http://localhost:8000/api/v1/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          password
-        }),
-      });
-  
-      const data = await res.json();
-      toast.success(data.message);
-      console.log(data);
       const newUser = {
-        id: data.id,
-        name:data.name,
-        email:data.email,
+        id: response?.data?.id,
+        name,
+        email,
       };
       
       setUser(newUser);
-      localStorage.setItem('admin', JSON.stringify(data.token));
+      localStorage.setItem('pocketplus_user', JSON.stringify(newUser));
       toast.success('Account created successfully');
       return true;
     } catch (error) {
       console.error('Registration error:', error);
-      toast.error('Failed to create account');
+      toast.error( error.message || 'Failed to create account');
       return false;
     } finally {
       setIsLoading(false);
