@@ -12,7 +12,7 @@ export async function registerApi(data){
 export async function loginApi(data){
     try {
         const response = await axios.post("http://localhost:8000/api/v1/login",data);
-        return response?.data;
+        return response?.data?.data;
     } catch (error) {
         throw new Error(error?.response?.data?.message || "Something want wrong");
     }

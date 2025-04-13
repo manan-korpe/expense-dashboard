@@ -55,7 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await loginApi({
         email,password
       });
-      
+      console.log(response);
       const newUser = {
         id: response.id,
         name: response.name,
@@ -63,6 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       
       setUser(newUser);
+      console.log(user);
       localStorage.setItem('pocketplus_user', JSON.stringify(newUser));
       toast.success('Logged in successfully');
       return true;

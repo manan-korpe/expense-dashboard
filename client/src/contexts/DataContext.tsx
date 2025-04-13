@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from './AuthContext';
 import Tesseract from 'tesseract.js'; //scan bill
+import { addTransactionApi } from '@/api/transaction';
 
 export type Category = 
   | 'housing' 
@@ -174,7 +175,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [transactions, budgets, user]);
 
-  const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
+  const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
+    addTransactionApi(transaction);
+    console.log("added");
     const newTransaction = {
       ...transaction,
       id: `t_${Date.now()}`,
