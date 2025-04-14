@@ -394,8 +394,8 @@ const BudgetPage = () => {
           
           {budgets.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {budgets.map((budget) => (
-                <div key={budget.id}>
+              {budgets.map((budget,key) => (
+                <div key={key}>
                   <BudgetProgress
                     category={budget.category}
                     budgetAmount={budget.amount}

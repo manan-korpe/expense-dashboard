@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
   }, []);
-  console.log(user);
+ 
   //done
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);

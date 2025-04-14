@@ -22,7 +22,6 @@ export async function getTransactionApi(){
                 date :String(val?.createdAt).split("T")[0]
             }
         });
-        console.log(updateData);
         return updateData;
         
     } catch (error) {

@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useAuth } from './AuthContext';
 import Tesseract from 'tesseract.js'; //scan bill
 import { addTransactionApi, getTransactionApi, putTransactionApi } from '@/api/transaction';
+import {getBudgetApi, postBudgetApi, putBudgetApi, deleteBudgetApi} from "../api/budget.jsx";
 
 export type Category = 
   | 'housing' 
@@ -61,10 +62,6 @@ export const useData = () => {
   return context;
 };
 
-const SAMPLE_TRANSACTIONS: Transaction[] = [];
-
-const SAMPLE_BUDGETS: Budget[] = [];
-
 //------------------------------------------scan bill------------------------
 const extractTotalBill = (text) => {
   const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
@@ -105,11 +102,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setBudgets([]);
         }).catch((error)=>{
           toast.error(error.message || "something want wrong in transaction and budget");
-          setTransactions([]);
-          setBudgets([]);
         }).finally(()=>{
           setIsLoading(false);
         });
+
+      getBudgetApi()
+      .then((response)=>{
+        setBudgets(response || []);
+      }).catch((error)=>{
+        toast.error(error.message || "something want wrong  while geting budget");
+      }).finally(()=> setIsLoading(false));
     }
   }, [user]);
 
@@ -165,27 +167,56 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const addBudget = (budget: Omit<Budget, 'id'>) => {
-    const newBudget = {
-      ...budget,
-      id: `b_${Date.now()}`,
-    };
-    setBudgets(prev => [...prev, newBudget]);
-    toast.success('Budget added');
+  const addBudget = async (budget: Omit<Budget, 'id'>) => {
+    try {
+      const response = await postBudgetApi({
+        category:budget.category,
+        amount:budget.amount,
+        period:budget.period
+      });
+
+      const newBudget = {
+        id:response._id,
+        amount:response.amount,
+        category:response.category,
+        period:response.period
+      }
+
+      setBudgets(prev => [...prev, newBudget]);
+      toast.success('Budget added');
+    } catch (error) {
+      toast.error(error.message || "budget not added");
+    }
   };
 
-  const updateBudget = (id: string, budgetUpdate: Partial<Omit<Budget, 'id'>>) => {
-    setBudgets(prev => 
-      prev.map(b => 
-        b.id === id ? { ...b, ...budgetUpdate } : b
-      )
-    );
-    toast.success('Budget updated');
+  const updateBudget = async(id: string, budgetUpdate: Partial<Omit<Budget, 'id'>>) => {
+    try {
+      const response = await putBudgetApi(id,{
+        category:budgetUpdate.category,
+        amount:budgetUpdate.amount,
+        period:budgetUpdate.period
+      });
+
+      setBudgets(prev => 
+        prev.map(b => 
+          b.id === id ? { ...b, ...budgetUpdate } : b
+        )
+      );
+
+      toast.success('Budget updated');
+    } catch (error) {
+      toast.error(error.message || "budget not updated");
+    }
   };
 
-  const deleteBudget = (id: string) => {
-    setBudgets(prev => prev.filter(b => b.id !== id));
-    toast.success('Budget deleted');
+  const deleteBudget = async(id: string) => {
+    try {
+      const response = await deleteBudgetApi(id);
+      setBudgets(prev => prev.filter(b => b.id !== id));
+      toast.success('Budget deleted');
+    } catch (error) {
+      
+    }
   };
 
   // Mock image processing with OCR

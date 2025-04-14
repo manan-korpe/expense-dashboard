@@ -454,9 +454,9 @@ const Dashboard = () => {
               <CardContent>
                 <div className="space-y-4">
                   {recentTransactions.length > 0 ? (
-                    recentTransactions.map((transaction) => (
+                    recentTransactions.map((transaction,key) => (
                       <div
-                        key={transaction.id}
+                        key={key}
                         className="flex items-center justify-between p-3 rounded-lg bg-gray-50 animate-hover"
                       >
                         <div className="flex items-center space-x-3">

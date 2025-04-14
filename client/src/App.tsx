@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams, useRoutes, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { DataProvider } from "./contexts/DataContext";
 import Index from "./pages/Index";
@@ -19,6 +19,9 @@ const queryClient = new QueryClient();
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const {pathname} = useLocation();
+  const authPath = ["/login","/register"];
+
   const { isAuthenticated, isLoading } = useAuth();
   
   if (isLoading) {
@@ -27,8 +30,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     </div>;
   }
   
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !authPath.includes(pathname)) {
     return <Navigate to="/login" replace />;
+  }else if(isAuthenticated && authPath.includes(pathname)){
+    console.log("rungin");
+    return <Navigate to="/dashboard" replace />;
   }
   
   return <>{children}</>;
@@ -40,8 +46,15 @@ const AppContent = () => {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/scanbill" element={<Billscaner/>}/>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={
+           <ProtectedRoute>
+            <Login />
+           </ProtectedRoute>
+          } />
+        <Route path="/register" element={
+          <ProtectedRoute>
+            <Register />
+          </ProtectedRoute>} />
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <Dashboard />
