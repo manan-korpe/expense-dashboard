@@ -30,7 +30,7 @@ console.log(req?.user?._id)
 });
 
 export const getTransaction = asyncHandler(async (req, res, next)=>{
-    const transactionHistory = await transactions.find({userId:req?.user?.id || ""});
+    let transactionHistory = await transactions.find({userId:req?.user?.id || ""});
 
     if(!transactionHistory)
         return res.status(400).json({success:false,message:"transaction history not found try again"});
@@ -64,4 +64,14 @@ export const putTransaction = asyncHandler(async (req,res,next)=>{
         return res.status(400).json({success:false,message:"update failed."});
 
     res.status(200).json({success:true,message:"Transaction updated",data:{updateTransaction}});
+});
+
+export const deletTransaction = asyncHandler( async (req, res, next)=>{
+    const id = req.params.id;
+    const hasTransactions = await transactions.findOneAndDelete({_id:id,userId:req.user.id});
+    
+    if(!hasTransactions)
+        return res.status(400).json({success:true,message:"transaction delete has been faild"});
+
+    res.status(200).json({success:true,message:"transaction deleted"});
 });

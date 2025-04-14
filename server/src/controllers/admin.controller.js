@@ -17,6 +17,10 @@ export const register = asyncHandler (async(req, res) => {
       return res.status(201).json({ message: "Registration successful",data:{id:newUser._id,name:newUser.name,email:newUser.email,} });
 });
 
+export const isMe = asyncHandler( async (req,res)=>{
+  res.status(200).json({success:true,message:"authenticate user",data:{id:req.user._id,name:req.user.name,email:req.user.email}})
+});
+
 export const login = asyncHandler(async (req, res) => {
   
     const { email, password } = req.body;
@@ -33,10 +37,15 @@ export const login = asyncHandler(async (req, res) => {
     }
     
     const payload = { id: user._id, role_id: user.role_id };
-    const token = jwt.sign(payload, process.env.ACCESS_TOKEN_KEY, { expiresIn: "10h" });
+    const token = jwt.sign(payload, process.env.ACCESS_TOKEN_KEY, { expiresIn: "10h"});
 
     res.cookie("admin", token, { httpOnly: true, maxAge:10 *60 * 60 * 1000 });
-    console.log(token, isMatch, user)
+    console.log(token, isMatch, user);
     return res.status(200).json({success:true, message: "Login successful",data:{id:user.id,name:user.name,email:user.email} });
 });
+
+export const logout = asyncHandler(async (req, res)=>{
+  res.clearCookie("admin");
+  res.status(200).json({message:"user logedout successfuly"});
+})
   

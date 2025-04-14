@@ -35,7 +35,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-  console.log(user);
+  
   const handleLogout = () => {
     logout();
     navigate('/login');

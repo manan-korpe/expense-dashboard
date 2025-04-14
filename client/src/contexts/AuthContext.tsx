@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import axios from "axios";
-import {registerApi,loginApi} from "../api/auth.tsx";
+import {registerApi,loginApi,logoutApi, isMeApi} from "../api/auth.tsx";
 
 type User = {
   id: string;
@@ -23,6 +23,7 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+//export AuthContext using useContext and make it custome hook 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -36,26 +37,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for saved user in localStorage
-    const savedUser = localStorage.getItem('pocketplus_user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (error) {
-        console.error('Failed to parse saved user:', error);
-        localStorage.removeItem('pocketplus_user');
-      }
-    }
-    setIsLoading(false);
-  }, []);
+    //checked user is Logged in or not if yes then set user details in user(setUser)
+    isMeApi()
+      .then((response)=>{
+        setUser({
+          id: response.id,
+          name: response.name,
+          email:response.email,
+        });
+      }).catch((error)=>{
+        console.log("something want wrong");
+      }).finally(()=>{
+        setIsLoading(false);
+      });
 
+  }, []);
+  console.log(user);
+  //done
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
+    
     try {
       const response = await loginApi({
         email,password
       });
-      console.log(response);
+      
       const newUser = {
         id: response.id,
         name: response.name,
@@ -63,12 +69,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       
       setUser(newUser);
-      console.log(user);
       localStorage.setItem('pocketplus_user', JSON.stringify(newUser));
       toast.success('Logged in successfully');
       return true;
     } catch (error) {
-      console.error('Login error:', error);
       toast.error(error.message || 'Failed to login');
       return false;
     } finally {
@@ -76,6 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  //done
   const register = async (name: string, email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
@@ -107,10 +112,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('pocketplus_user');
-    toast.success('Logged out successfully');
+  //done
+  const logout = async() => {
+    try {
+      const response = await logoutApi();
+      setUser(null);
+      toast.success('Logged out successfully');
+    } catch (error) {
+      toast.success('Logged out faild');
+    }
   };
 
   // Add the missing updateUser method

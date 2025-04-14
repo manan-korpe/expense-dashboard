@@ -10,7 +10,10 @@ import adminRoute from "./src/routes/admin.route.js";
 const app = express();
 
 //for frontend connection 
-app.use(cors());
+app.use(cors({
+    origin:"http://localhost:8080",
+    credentials:true
+}));
 
 //middlerware
 app.use(express.static('public'))

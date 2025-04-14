@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from './AuthContext';
 import Tesseract from 'tesseract.js'; //scan bill
-import { addTransactionApi } from '@/api/transaction';
+import { addTransactionApi, getTransactionApi, putTransactionApi } from '@/api/transaction';
 
 export type Category = 
   | 'housing' 
@@ -52,6 +52,7 @@ type DataContextType = {
 
 const DataContext = createContext<DataContextType | null>(null);
 
+//export DataContext using useContext and make it custome hook 
 export const useData = () => {
   const context = useContext(DataContext);
   if (!context) {
@@ -60,55 +61,9 @@ export const useData = () => {
   return context;
 };
 
-const SAMPLE_TRANSACTIONS: Transaction[] = [
-  {
-    id: 't1',
-    amount: 1500,
-    description: 'Salary',
-    category: 'income',
-    date: '2025-04-01',
-    type: 'income'
-  },
-  {
-    id: 't2',
-    amount: 800,
-    description: 'Rent',
-    category: 'housing',
-    date: '2025-04-02',
-    type: 'expense'
-  },
-  {
-    id: 't3',
-    amount: 120,
-    description: 'Groceries',
-    category: 'food',
-    date: '2025-04-03',
-    type: 'expense'
-  },
-  {
-    id: 't4',
-    amount: 45,
-    description: 'Gas',
-    category: 'transportation',
-    date: '2025-04-05',
-    type: 'expense'
-  },
-  {
-    id: 't5',
-    amount: 25,
-    description: 'Movie tickets',
-    category: 'entertainment',
-    date: '2025-04-08',
-    type: 'expense'
-  }
-];
+const SAMPLE_TRANSACTIONS: Transaction[] = [];
 
-const SAMPLE_BUDGETS: Budget[] = [
-  { id: 'b1', category: 'housing', amount: 1000, period: 'monthly' },
-  { id: 'b2', category: 'food', amount: 400, period: 'monthly' },
-  { id: 'b3', category: 'transportation', amount: 200, period: 'monthly' },
-  { id: 'b4', category: 'entertainment', amount: 100, period: 'monthly' }
-];
+const SAMPLE_BUDGETS: Budget[] = [];
 
 //------------------------------------------scan bill------------------------
 const extractTotalBill = (text) => {
@@ -135,6 +90,7 @@ const extractTotalBill = (text) => {
   return totalBill;
 };
 //--------------------------------end---------------------------------
+
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -142,62 +98,71 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      // Load data from localStorage or use sample data
-      try {
-        const savedTransactions = localStorage.getItem(`pocketplus_transactions_${user.id}`);
-        const savedBudgets = localStorage.getItem(`pocketplus_budgets_${user.id}`);
-        
-        setTransactions(savedTransactions ? JSON.parse(savedTransactions) : SAMPLE_TRANSACTIONS);
-        setBudgets(savedBudgets ? JSON.parse(savedBudgets) : SAMPLE_BUDGETS);
-      } catch (error) {
-        console.error('Error loading data from localStorage:', error);
-        // Fall back to sample data
-        setTransactions(SAMPLE_TRANSACTIONS);
-        setBudgets(SAMPLE_BUDGETS);
-      }
-    } else {
-      setTransactions([]);
-      setBudgets([]);
+    if(user){
+      getTransactionApi()
+        .then((response)=>{
+          setTransactions(response || []);
+          setBudgets([]);
+        }).catch((error)=>{
+          toast.error(error.message || "something want wrong in transaction and budget");
+          setTransactions([]);
+          setBudgets([]);
+        }).finally(()=>{
+          setIsLoading(false);
+        });
     }
-    setIsLoading(false);
   }, [user]);
 
-  // Save data whenever it changes
-  useEffect(() => {
-    if (user) {
-      try {
-        localStorage.setItem(`pocketplus_transactions_${user.id}`, JSON.stringify(transactions));
-        localStorage.setItem(`pocketplus_budgets_${user.id}`, JSON.stringify(budgets));
-      } catch (error) {
-        console.error('Error saving data to localStorage:', error);
-      }
-    }
-  }, [transactions, budgets, user]);
-
   const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
-    addTransactionApi(transaction);
-    console.log("added");
+   try {
+    const response = await addTransactionApi(transaction);
+    
     const newTransaction = {
-      ...transaction,
-      id: `t_${Date.now()}`,
+      id: response?._id,
+      amount: Number(response.amount),
+      description: response?.description || "",
+      category: response?.category,
+      date: String(response?.createdAt).split("T")[0],
+      type: response?.type,
+      billImageUrl: "",
     };
+   console.log(newTransaction)
     setTransactions(prev => [newTransaction, ...prev]);
     toast.success('Transaction added');
+   } catch (error) {
+    toast.error(error.message || "something want wrong");
+   }
   };
 
-  const updateTransaction = (id: string, transactionUpdate: Partial<Omit<Transaction, 'id'>>) => {
-    setTransactions(prev => 
-      prev.map(t => 
-        t.id === id ? { ...t, ...transactionUpdate } : t
-      )
-    );
-    toast.success('Transaction updated');
+  const updateTransaction = async  (id: string, transactionUpdate: Partial<Omit<Transaction, 'id'>>) => {
+    try {
+      const response = await putTransactionApi(id,{
+        amount:transactionUpdate.amount,
+        description:transactionUpdate.description,
+        category:transactionUpdate.category,
+        type:transactionUpdate.type
+      });
+      console.log(response);
+      setTransactions(prev => 
+        prev.map(t => 
+          t.id === id ? { ...t, ...transactionUpdate } : t
+        )
+      );
+
+      toast.success('Transaction updated');
+    } catch (error) {
+      toast.error(error.message || "Transaction update faild ");
+    }
   };
 
-  const deleteTransaction = (id: string) => {
-    setTransactions(prev => prev.filter(t => t.id !== id));
-    toast.success('Transaction deleted');
+  const deleteTransaction = async (id: string) => {
+    try {
+      await deleteTransaction(id); //for delete transaction
+      setTransactions(prev => prev.filter(t => t.id !== id));
+      toast.success('Transaction deleted');
+    } catch (error) {
+      toast.error(error.message || 'Transaction delete falid');
+    }
   };
 
   const addBudget = (budget: Omit<Budget, 'id'>) => {
