@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -68,6 +68,66 @@ const Dashboard = () => {
   const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
   const balance = totalIncome - totalExpenses;
 
+  const [expenseChart,setExpenseChart] = useState([]);
+  const [incomeChart,setIncomeChart] = useState([{name:"",value:0}]);
+  const [combiChart,setCombiChart] = useState({name:"",value:0});
+
+  const lastSixMonths = Array.from({ length: 6 }, (_, i) => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - i);
+    return date.toLocaleString('default', { month: 'short' });
+  }).reverse();
+  console.log(expenseChart,incomeChart,combiChart)
+
+  useEffect(() => {
+    console.log("transactions updated", transactions);
+  
+    const normalizeMonth = (dateStr) =>
+      new Date(dateStr).toLocaleString('default', { month: 'short' }).toLowerCase();
+  
+    const expenseData = lastSixMonths.map((mon) => {
+      const monthExpense = transactions.reduce((sum, val) => {
+        const isMonth = normalizeMonth(val.createdAt);
+        if (isMonth === mon.toLowerCase() && val.type === 'expense') {
+          return sum + val.amount;
+        }
+        return sum;
+      }, 0);
+      return { name: mon, value: monthExpense };
+    });
+  
+    const incomeData = lastSixMonths.map((mon) => {
+      const monthIncome = transactions.reduce((sum, val) => {
+        const isMonth = normalizeMonth(val.createdAt);
+        if (isMonth === mon.toLowerCase() && val.type === 'income') {
+          return sum + val.amount;
+        }
+        return sum;
+      }, 0);
+      return { name: mon, value: monthIncome };
+    });
+  
+    const combinedData = lastSixMonths.map((mon) => {
+      const combined = transactions.reduce(
+        (com, val) => {
+          const isMonth = normalizeMonth(val.createdAt);
+          if (isMonth === mon.toLowerCase()) {
+            if (val.type === 'income') com.income += val.amount;
+            else com.expense += val.amount;
+          }
+          return com;
+        },
+        { income: 0, expense: 0 }
+      );
+      return { name: mon, Income: combined.income, Expenses: combined.expense };
+    });
+  
+    console.log("Expense Data:", expenseData);
+    setExpenseChart([...expenseData]);
+    setIncomeChart([...incomeData]);
+    setCombiChart([...combinedData]);
+  }, [transactions]);
+  
   const expensesByCategory = transactions
     .filter(t => t.type === 'expense')
     .reduce((acc, t) => {
@@ -110,25 +170,7 @@ const Dashboard = () => {
     }
   };
 
-  const lastSixMonths = Array.from({ length: 6 }, (_, i) => {
-    const date = new Date();
-    date.setMonth(date.getMonth() - i);
-    return date.toLocaleString('default', { month: 'short' });
-  }).reverse();
 
-  const expenseData = lastSixMonths.map(month => {
-    return {
-      name: month,
-      value: Math.floor(Math.random() * 2000) + 500
-    };
-  });
-
-  const incomeData = lastSixMonths.map(month => {
-    return {
-      name: month,
-      value: Math.floor(Math.random() * 3000) + 2000
-    };
-  });
 
   const handleImageCapture = (imageUrl: string) => {
     setCapturedImageUrl(imageUrl);
@@ -359,7 +401,7 @@ const Dashboard = () => {
                   </TabsList>
                   <TabsContent value="expenses" className="h-[300px]">
                     <AreaChart
-                      data={expenseData}
+                      data={expenseChart}
                       index="name"
                       categories={["value"]}
                       colors={["#8B5CF6"]}
@@ -373,7 +415,7 @@ const Dashboard = () => {
                   </TabsContent>
                   <TabsContent value="income" className="h-[300px]">
                     <AreaChart
-                      data={incomeData}
+                      data={incomeChart}
                       index="name"
                       categories={["value"]}
                       colors={["#22C55E"]}
@@ -387,11 +429,7 @@ const Dashboard = () => {
                   </TabsContent>
                   <TabsContent value="combined" className="h-[300px]">
                     <BarChart
-                      data={lastSixMonths.map(month => ({
-                        name: month,
-                        "Income": Math.floor(Math.random() * 3000) + 2000,
-                        "Expenses": Math.floor(Math.random() * 2000) + 500
-                      }))}
+                      data={combiChart}
                       index="name"
                       categories={["Income", "Expenses"]}
                       colors={["#22C55E", "#F43F5E"]}

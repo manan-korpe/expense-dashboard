@@ -2,7 +2,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import axios from "axios";
-import {registerApi,loginApi,logoutApi, isMeApi} from "../api/auth.tsx";
+import {registerApi,loginApi,logoutApi, isMeApi, updateAdminApi, deleteAdminApi} from "../api/auth.tsx";
+import { Navigate, useNavigate } from 'react-router-dom';
 
 type User = {
   id: string;
@@ -100,9 +101,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
       };
       
-      setUser(newUser);
       toast.success('Account created successfully');
-      return true;
+      window.location.href = "/login";
     } catch (error) {
       console.error('Registration error:', error);
       toast.error( error.message || 'Failed to create account');
@@ -127,16 +127,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateUser = async (updatedUser: User): Promise<boolean> => {
     setIsLoading(true);
     try {
-      // In a real app, this would be an API call
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      
+     const response = await updateAdminApi({
+      name:updatedUser.name,
+      email:updatedUser.email
+     });
+     
       setUser(updatedUser);
-      localStorage.setItem('pocketplus_user', JSON.stringify(updatedUser));
       toast.success('Profile updated successfully');
       return true;
     } catch (error) {
-      console.error('Update user error:', error);
-      toast.error('Failed to update profile');
+      toast.error(error.message || 'Failed to update profile');
       return false;
     } finally {
       setIsLoading(false);
@@ -147,16 +147,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const deleteUser = async (): Promise<boolean> => {
     setIsLoading(true);
     try {
-      // In a real app, this would be an API call
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      
+      const response = await deleteAdminApi();
       setUser(null);
-      localStorage.removeItem('pocketplus_user');
       toast.success('Account deleted successfully');
       return true;
     } catch (error) {
-      console.error('Delete user error:', error);
-      toast.error('Failed to delete account');
+      toast.error(error.messae || 'Failed to delete account');
       return false;
     } finally {
       setIsLoading(false);

@@ -118,18 +118,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
    try {
     const response = await addTransactionApi(transaction);
-    
-    const newTransaction = {
-      id: response?._id,
-      amount: Number(response.amount),
-      description: response?.description || "",
-      category: response?.category,
-      date: String(response?.createdAt).split("T")[0],
-      type: response?.type,
-      billImageUrl: "",
-    };
-   console.log(newTransaction)
-    setTransactions(prev => [newTransaction, ...prev]);
+   
+    setTransactions(prev => [response, ...prev]);
     toast.success('Transaction added');
    } catch (error) {
     toast.error(error.message || "something want wrong");
@@ -147,7 +137,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log(response);
       setTransactions(prev => 
         prev.map(t => 
-          t.id === id ? { ...t, ...transactionUpdate } : t
+          t.id === id ? { ...t, ...response } : t
         )
       );
 

@@ -15,7 +15,7 @@ export const authentication = asyncHandler(async (req, res, next) => {
     return res.status(400).json({success:false,message:"login to access this resource"})
   
   const isFindUser = await adminDB.findById(isVerify.id);
-
+  
   if(!isFindUser)
     return res.status(400).json({success:false,message:"user not found"})
 

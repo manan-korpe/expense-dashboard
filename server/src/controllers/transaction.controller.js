@@ -18,7 +18,8 @@ console.log(req?.user?._id)
         amount:data.amount,
         category:data.category,
         description:data?.description || "",
-        type:data.type
+        type:data.type,
+        createdAt:new Date(data.date.replaceAll("/","-"))
     });
     
     const newTransaction = await  madeTransaction.save();

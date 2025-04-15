@@ -42,3 +42,25 @@ export async function isMeApi(){
         throw new Error(error?.response?.data?.message || "Something want wrong");
     }
 }
+
+export async function updateAdminApi(data){
+    try {
+        const response = await axios.put("http://localhost:8000/api/v1/profile",data,{
+            withCredentials:true 
+        });
+        return response?.data?.data?.profile;
+    } catch (error) {
+        throw new Error(error?.response?.data?.message || "Something want wrong");
+    }
+} 
+
+export async function deleteAdminApi(){
+    try {
+        const response = await axios.delete("http://localhost:8000/api/v1/profile",{
+            withCredentials:true 
+        });
+        return response?.data?.data?.message;
+    } catch (error) {
+        throw new Error(error?.response?.data?.message || "Something want wrong");
+    }
+} 

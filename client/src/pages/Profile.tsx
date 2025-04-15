@@ -14,8 +14,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Trash2 as TrashIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { user, updateUser, deleteUser, logout } = useAuth();
   const [name, setName] = useState(user?.name || '');
@@ -52,17 +54,17 @@ const Profile = () => {
     setIsDeleting(true);
     try {
       await deleteUser();
-      logout();
-      toast({
-        title: "Account Deleted",
-        description: "Your account has been successfully deleted.",
-      });
+      navigate("/login");
+      // toast({
+      //   title: "Account Deleted",
+      //   description: "Your account has been successfully deleted.",
+      // });
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Deletion Failed",
-        description: error.message || "Failed to delete account.",
-      });
+      // toast({
+      //   variant: "destructive",
+      //   title: "Deletion Failed",
+      //   description: error.message || "Failed to delete account.",
+      // });
     } finally {
       setIsDeleting(false);
     }
