@@ -34,8 +34,8 @@ export async function putBudgetApi(id,data) {
 
 export async function deleteBudgetApi(id) {
     try {
-        const response = await axios.put(`/budget/${id}`);
-        return response?.data?.data?.message;
+        const response = await axios.delete(`/budget/${id}`);
+        return response?.data?.data;
     } catch (error) {
         throw new Error(error?.response?.data?.message || "something want wrong");
     }

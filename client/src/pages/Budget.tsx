@@ -177,8 +177,9 @@ const BudgetPage = () => {
   // Handle form submission for editing budget
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (currentBudget && currentBudget.id) {
-      updateBudget(currentBudget.id, {
+    
+    if (currentBudget && currentBudget._id) {
+      updateBudget(currentBudget._id, {
         category: currentBudget.category,
         amount: Number(currentBudget.amount),
         period: currentBudget.period
@@ -191,6 +192,7 @@ const BudgetPage = () => {
   
   // Handle editing budget
   const handleEdit = (budget: Budget) => {
+    console.log(budget);
     setCurrentBudget(budget);
     setIsEditingBudget(true);
   };
@@ -429,7 +431,7 @@ const BudgetPage = () => {
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction 
-                            onClick={() => handleDelete(budget.id)}
+                            onClick={() => handleDelete(budget._id)}
                             className="bg-red-500 hover:bg-red-600"
                           >
                             Delete

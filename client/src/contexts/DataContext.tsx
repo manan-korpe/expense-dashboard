@@ -99,7 +99,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       getTransactionApi()
         .then((response)=>{
           setTransactions(response || []);
-          setBudgets([]);
         }).catch((error)=>{
           toast.error(error.message || "something want wrong in transaction and budget");
         }).finally(()=>{
@@ -180,6 +179,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateBudget = async(id: string, budgetUpdate: Partial<Omit<Budget, 'id'>>) => {
+    console.log(id,budgetUpdate)
     try {
       const response = await putBudgetApi(id,{
         category:budgetUpdate.category,
@@ -189,10 +189,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setBudgets(prev => 
         prev.map(b => 
-          b.id === id ? { ...b, ...budgetUpdate } : b
+          b._id === id ? { ...b, ...budgetUpdate } : b
         )
       );
-
       toast.success('Budget updated');
     } catch (error) {
       toast.error(error.message || "budget not updated");
@@ -202,10 +201,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const deleteBudget = async(id: string) => {
     try {
       const response = await deleteBudgetApi(id);
-      setBudgets(prev => prev.filter(b => b.id !== id));
+      setBudgets(prev => prev.filter(b => b._id !== id));
       toast.success('Budget deleted');
     } catch (error) {
-      
+      console.log(error);
     }
   };
 
